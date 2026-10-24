@@ -1,0 +1,13 @@
+﻿Prueba de la ultima linea de defensa: regla 'ejemplares negativo' comentada
+Archivo: libros_defensa_temporal.csv (3 libros validos + 1 con ejemplares = -3)
+
+SET
+BEGIN
+TRUNCATE TABLE
+COPY 5
+DELETE 1
+INSERT 0 4
+UPDATE 4
+UPDATE 0
+psql:/scripts/carga-libros-sin-regla-temporal.sql:81: ERROR:  new row for relation "libro" violates check constraint "libro_ejemplares_disponibles_check"
+DETAIL:  Failing row contains (9780000000204, Relato con ejemplares negativos, Autor de Prueba, Novela, null, 2015, -3, t).

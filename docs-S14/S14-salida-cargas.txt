@@ -1,0 +1,138 @@
+﻿
+########## 1. Libros, archivo limpio
+$ psql -f /scripts/carga-libros.sql
+SET
+BEGIN
+TRUNCATE TABLE
+COPY 33
+DELETE 1
+INSERT 0 32
+UPDATE 32
+UPDATE 0
+INSERT 0 32
+INSERT 0 0
+COMMIT
+ cargadas | rechazadas 
+----------+------------
+       32 |          0
+(1 row)
+
+ linea | motivo | contenido 
+-------+--------+-----------
+(0 rows)
+
+
+########## 2. Libros con errores
+$ psql -v archivo=/scripts/datos/libros_semilla_con_errores.csv -f /scripts/carga-libros.sql
+SET
+BEGIN
+TRUNCATE TABLE
+COPY 9
+DELETE 1
+INSERT 0 8
+UPDATE 8
+UPDATE 0
+INSERT 0 0
+INSERT 0 8
+COMMIT
+ cargadas | rechazadas 
+----------+------------
+        0 |          8
+(1 row)
+
+ linea |              motivo              |                                          contenido                                          
+-------+----------------------------------+---------------------------------------------------------------------------------------------
+     2 | isbn ya existe en el catálogo    | 9780000000001,Cien años de soledad (edición duplicada),Gabriel García Márquez,Novela,1967,2
+     3 | título vacío                     | 9780000000033,,Julio Cortázar,Novela,1963,3
+     4 | año no numérico                  | 9780000000034,Relato sin ejemplares numéricos,Autor de Prueba,Novela,dos,3
+     5 | año no numérico                  | 9780000000035,Relato con año inválido,Autor de Prueba,Novela,MCMXLIX,2
+     6 | tiene 7 columnas, se esperaban 6 | 9780000000036,Relato con columna de más,Autor de Prueba,Novela,1999,2,columna_sobrante
+     7 | autor vacío                      | 9780000000037,Relato sin autor,,Novela,2005,1
+     8 | isbn vacío                       | ,Relato sin ISBN,Autor de Prueba,Novela,2010,1
+     9 | ejemplares negativo              | 9780000000038,Relato con ejemplares negativos,Autor de Prueba,Novela,2015,-3
+(8 rows)
+
+
+########## (previa) Lectores, archivo limpio
+$ psql -f /scripts/carga-lectores.sql
+SET
+CREATE EXTENSION
+BEGIN
+psql:/scripts/carga-lectores.sql:24: NOTICE:  extension "pgcrypto" already exists, skipping
+TRUNCATE TABLE
+COPY 21
+DELETE 1
+INSERT 0 20
+UPDATE 20
+UPDATE 0
+INSERT 0 20
+INSERT 0 20
+INSERT 0 0
+COMMIT
+ cargadas | rechazadas 
+----------+------------
+       20 |          0
+(1 row)
+
+ linea | motivo | contenido 
+-------+--------+-----------
+(0 rows)
+
+
+########## 3. Lectores con errores
+$ psql -v archivo=/scripts/datos/lectores_semilla_con_errores.csv -f /scripts/carga-lectores.sql
+SET
+psql:/scripts/carga-lectores.sql:24: NOTICE:  extension "pgcrypto" already exists, skipping
+CREATE EXTENSION
+BEGIN
+TRUNCATE TABLE
+COPY 7
+DELETE 1
+INSERT 0 6
+UPDATE 6
+UPDATE 0
+INSERT 0 0
+INSERT 0 0
+INSERT 0 6
+COMMIT
+ cargadas | rechazadas 
+----------+------------
+        0 |          6
+(1 row)
+
+ linea |                   motivo                    |                                         contenido                                         
+-------+---------------------------------------------+-------------------------------------------------------------------------------------------
+     2 | documento ya existe                         | 1000000001,Mariana,Gómez Rojas (duplicado),mariana.gomez@correo-ejemplo.edu.co,3001000001
+     3 | correo vacío                                | 1000000021,Carlos,Peña Londoño,,3001000021
+     4 | correo mal formado                          | 1000000022,Diana,Salgado Cuervo,diana.salgado-arroba-correo-ejemplo.edu.co,3001000022
+     5 | teléfono no numérico o de longitud inválida | 1000000023,Jorge,Restrepo Vélez,jorge.restrepo@correo-ejemplo.edu.co,tres-cero-cero
+     6 | documento vacío                             | ,Sin Documento,Prueba Prueba,sin.documento@correo-ejemplo.edu.co,3001000024
+     7 | nombres vacío                               | 1000000025,,Sin Nombre,sin.nombre@correo-ejemplo.edu.co,3001000025
+(6 rows)
+
+
+########## 4. CSV propio (libros_propio.csv)
+$ psql -v archivo=/scripts/datos/libros_propio.csv -f /scripts/carga-libros.sql
+SET
+BEGIN
+TRUNCATE TABLE
+COPY 9
+DELETE 1
+INSERT 0 8
+UPDATE 8
+UPDATE 1
+INSERT 0 5
+INSERT 0 3
+COMMIT
+ cargadas | rechazadas 
+----------+------------
+        5 |          3
+(1 row)
+
+ linea |                motivo                 |                                   contenido                                   
+-------+---------------------------------------+-------------------------------------------------------------------------------
+     7 | isbn repetido en el archivo (línea 4) | 9780000000103,La vorágine (copia repetida),José Eustasio Rivera,Novela,1924,1
+     8 | año en el futuro                      | 9780000000106,Libro del futuro,Autor de Prueba,Ciencia,2077,2
+     9 | isbn no tiene 13 dígitos              | 978000000010,Relato con ISBN corto,Autor de Prueba,Novela,2001,1
+(3 rows)
+
