@@ -1,15 +1,9 @@
--- 01_esquema.sql
 -- Proyecto Biblioteca - Grupo 1
 -- Base corregida a partir del modelo de S8 y preparada para S14.
--- PostgreSQL
 
 DROP SCHEMA IF EXISTS biblioteca CASCADE;
 CREATE SCHEMA biblioteca;
 SET search_path TO biblioteca;
-
--- ============================================================
--- TABLAS DEL MODELO
--- ============================================================
 
 CREATE TABLE usuario (
     id_usuario       integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -118,11 +112,7 @@ CREATE TABLE prestamo (
         )
 );
 
--- ============================================================
--- INFRAESTRUCTURA PARA S14: CARGA DESDE CSV
--- No forman parte del modelo conceptual; sirven para staging,
--- validación y registro de filas rechazadas.
--- ============================================================
+-- Tablas auxiliares de la carga desde CSV (S14); no son parte del modelo conceptual.
 
 CREATE TABLE rechazo_carga (
     id         integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -133,13 +123,12 @@ CREATE TABLE rechazo_carga (
     fecha      timestamptz NOT NULL DEFAULT now()
 );
 
--- Guarda cada línea del archivo completa antes de partirla.
 CREATE TABLE stg_linea (
     n      integer GENERATED ALWAYS AS IDENTITY,
     linea  text
 );
 
--- Staging de libros: todo se recibe como texto.
+-- Todo se recibe como texto para poder validar antes de convertir.
 CREATE TABLE stg_libro (
     linea_csv               integer,
     contenido               text,
@@ -153,7 +142,6 @@ CREATE TABLE stg_libro (
     motivo                  text
 );
 
--- Staging de lectores: todo se recibe como texto.
 CREATE TABLE stg_lector (
     linea_csv   integer,
     contenido   text,
@@ -165,7 +153,3 @@ CREATE TABLE stg_lector (
     telefono    text,
     motivo      text
 );
-
--- ============================================================
--- FIN DEL ESQUEMA
--- ============================================================

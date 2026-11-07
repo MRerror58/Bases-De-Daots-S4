@@ -21,11 +21,10 @@ BEGIN;
 
 TRUNCATE stg_linea, stg_libro RESTART IDENTITY;
 
--- 1. Leer el archivo tal cual, una fila por línea (el tabulador no aparece en el CSV)
+-- FORMAT text funciona porque el CSV no contiene tabuladores.
 COPY stg_linea (linea) FROM :'archivo' WITH (FORMAT text);
 DELETE FROM stg_linea WHERE n = 1;          -- encabezado
 
--- 2. Partir cada línea en sus campos, todavía como texto
 INSERT INTO stg_libro (linea_csv, contenido, num_campos, isbn, titulo, autor,
                        categoria, anio_publicacion, ejemplares_disponibles)
 SELECT n, linea,
@@ -38,9 +37,7 @@ SELECT n, linea,
        trim(split_part(linea, ',', 6))
 FROM stg_linea;
 
--- 3. Validar: la primera regla que falla da el motivo.
---    El orden importa: cada ::integer solo se intenta después de comprobar
---    con una expresión regular que el texto son dígitos.
+-- El orden importa: cada ::integer va después de la regex que comprueba que son dígitos.
 UPDATE stg_libro SET motivo = CASE
     WHEN num_campos <> 6                          THEN 'tiene ' || num_campos || ' columnas, se esperaban 6'
     WHEN isbn = ''                                THEN 'isbn vacío'
@@ -63,7 +60,7 @@ UPDATE stg_libro SET motivo = CASE
                                                   THEN 'isbn ya existe en el catálogo'
 END;
 
--- 4. Duplicados dentro del mismo archivo: se conserva la primera aparición
+-- Duplicados dentro del archivo: se conserva la primera aparición.
 UPDATE stg_libro SET motivo = 'isbn repetido en el archivo (línea '
        || (SELECT min(s2.linea_csv) FROM stg_libro s2
            WHERE s2.isbn = stg_libro.isbn AND s2.motivo IS NULL) || ')'
@@ -73,14 +70,12 @@ WHERE motivo IS NULL
                 AND s2.motivo IS NULL
                 AND s2.linea_csv < stg_libro.linea_csv);
 
--- 5. Pasar las filas válidas a libro, ya con su tipo (editorial y activo toman su valor por defecto)
 INSERT INTO libro (isbn, titulo, autor, categoria, anio_publicacion, ejemplares_disponibles)
 SELECT isbn, titulo, autor, categoria,
        anio_publicacion::smallint, ejemplares_disponibles::integer
 FROM stg_libro
 WHERE motivo IS NULL;
 
--- 6. Dejar constancia de las rechazadas
 INSERT INTO rechazo_carga (archivo, linea, contenido, motivo)
 SELECT :'archivo', linea_csv, contenido, motivo
 FROM stg_libro
@@ -88,7 +83,6 @@ WHERE motivo IS NOT NULL;
 
 COMMIT;
 
--- Resumen de la carga
 SELECT count(*) FILTER (WHERE motivo IS NULL)     AS cargadas,
        count(*) FILTER (WHERE motivo IS NOT NULL) AS rechazadas
 FROM stg_libro;

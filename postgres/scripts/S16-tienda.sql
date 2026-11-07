@@ -3,11 +3,7 @@
 --
 -- Uso (desde entorno-docker/, con este archivo copiado en postgres/scripts/):
 --   docker compose exec postgres psql -U curso -d curso -f /scripts/S16-tienda.sql
---
--- Se puede correr cuantas veces se quiera: borra y recrea el esquema
--- "tienda" completo, sin tocar nada más de la base.
--- Para trabajar después sobre estas tablas desde psql o pgAdmin:
---   SET search_path TO tienda;
+-- Es repetible: borra y recrea solo el esquema "tienda".
 
 \set ON_ERROR_STOP on
 

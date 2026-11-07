@@ -3,13 +3,8 @@
 --
 -- Uso (desde entorno-docker/, con este archivo copiado en postgres/scripts/):
 --   docker compose exec postgres psql -U curso -d curso -f /scripts/S15-reportes-demo.sql
---
--- Se puede correr cuantas veces se quiera: borra y recrea el esquema
--- "reportes_demo" completo y al final imprime los cuatro reportes.
---
--- Las fechas de los préstamos se calculan a partir de CURRENT_DATE, para
--- que los reportes de mora den lo mismo sin importar el día en que se
--- corra el script.
+-- Es repetible: borra y recrea solo el esquema "reportes_demo".
+-- Las fechas parten de CURRENT_DATE para que la mora salga igual cualquier día.
 
 \set ON_ERROR_STOP on
 
@@ -17,10 +12,7 @@ DROP SCHEMA IF EXISTS reportes_demo CASCADE;
 CREATE SCHEMA reportes_demo;
 SET search_path TO reportes_demo;
 
--- ---------------------------------------------------------------
--- DDL: libro y lector como en carga_demo (S14), sin los ejemplares,
--- y una tabla de préstamos. La devolución NULL = préstamo abierto.
--- ---------------------------------------------------------------
+-- fecha_devolucion NULL = préstamo abierto.
 
 CREATE TABLE libro (
     isbn       varchar(13)   PRIMARY KEY CHECK (isbn ~ '^[0-9]{13}$'),
@@ -48,10 +40,6 @@ CREATE TABLE prestamo (
     CHECK (fecha_devolucion >= fecha_prestamo)
 );
 
--- ---------------------------------------------------------------
--- DML: 9 libros y 6 lectores de los CSV semilla
--- ---------------------------------------------------------------
-
 INSERT INTO libro (isbn, titulo, autor, categoria) VALUES
     ('9780000000001', 'Cien años de soledad',            'Gabriel García Márquez', 'Novela'),
     ('9780000000003', 'Crónica de una muerte anunciada', 'Gabriel García Márquez', 'Novela'),
@@ -71,11 +59,7 @@ INSERT INTO lector (documento, nombres, apellidos, correo, telefono) VALUES
     ('1000000005', 'Camila',     'Hernández Torres', 'camila.hernandez@correo-ejemplo.edu.co',   '3001000005'),
     ('1000000006', 'Sebastián',  'González Morales', 'sebastian.gonzalez@correo-ejemplo.edu.co', '3001000006');
 
--- ---------------------------------------------------------------
--- DML: 15 préstamos, cada uno pensado para probar un caso de los reportes.
--- p = días atrás del préstamo; d = días atrás de la devolución (NULL si
--- sigue abierto). Plazo de 14 días: fecha_esperada = fecha_prestamo + 14.
--- ---------------------------------------------------------------
+-- p y d: días atrás del préstamo y de la devolución (NULL = abierto). Plazo de 14 días.
 
 INSERT INTO prestamo (isbn, documento, fecha_prestamo, fecha_esperada, fecha_devolucion)
 SELECT isbn, documento,
@@ -105,10 +89,6 @@ FROM (VALUES
     ('9780000000005', '1000000005',  16, NULL)
     -- Sebastián: ningún préstamo
 ) AS v (isbn, documento, p, d);
-
--- ---------------------------------------------------------------
--- Los cuatro reportes (sección 8 de la guía de S15)
--- ---------------------------------------------------------------
 
 \echo
 \echo '== Reporte 1. Los libros más prestados (aquí, los 3 primeros con empates) =='

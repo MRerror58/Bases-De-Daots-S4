@@ -3,19 +3,11 @@
 --
 -- Uso (desde entorno-docker/, con este archivo copiado en postgres/scripts/):
 --   docker compose exec postgres psql -U curso -d curso -f /scripts/S15-matriculas.sql
---
--- Se puede correr cuantas veces se quiera: borra y recrea el esquema
--- "matriculas" completo (el mismo de S13), sin tocar nada más de la base.
--- Para trabajar después sobre estas tablas desde psql o pgAdmin:
---   SET search_path TO matriculas;
+-- Es repetible: borra y recrea solo el esquema "matriculas".
 
 DROP SCHEMA IF EXISTS matriculas CASCADE;
 CREATE SCHEMA matriculas;
 SET search_path TO matriculas;
-
--- ---------------------------------------------------------------
--- DDL: las cuatro tablas de S9 y S13, sin cambios
--- ---------------------------------------------------------------
 
 CREATE TABLE programa (
     cod_prog     integer      PRIMARY KEY,
@@ -41,10 +33,6 @@ CREATE TABLE aprobo (
     PRIMARY KEY (cod_est, cod_curso)
 );
 
--- ---------------------------------------------------------------
--- DML: los datos de S9 y S13 ...
--- ---------------------------------------------------------------
-
 INSERT INTO programa (cod_prog, nombre_prog) VALUES
     (3743, 'Ingeniería de Sistemas'),
     (3752, 'Estadística');
@@ -69,11 +57,7 @@ INSERT INTO aprobo (cod_est, cod_curso, nota) VALUES
     (2610004, '750006C', 3.0),
     (2610004, '750001C', 3.5);
 
--- ---------------------------------------------------------------
--- ... más dos filas sin pareja, para los joins externos y los conteos
--- en cero: una estudiante que aún no ha aprobado nada y un curso que
--- nadie ha aprobado. Son las mismas de los ejemplos de INSERT de S13.
--- ---------------------------------------------------------------
+-- Filas sin pareja para los joins externos: una estudiante sin aprobados y un curso sin aprobados.
 
 INSERT INTO estudiante (cod_est, nombre, cod_prog) VALUES
     (2610005, 'Elena', 3752);
